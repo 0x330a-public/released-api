@@ -184,27 +184,33 @@ impl Item {
         let mut item_queue = VecDeque::from(items);
         let mut transformed = vec![];
         let mut building = String::new();
+        let mut building_type = "text";
         while let Some(next) = item_queue.pop_front() {
-            if next.category.starts_with("break") {
+            if building.len() > 0 
+                && (next.category.starts_with("break") || ((building_type == "bold" || building_type == "italic")
+                && building_type != next.category && !next.category.starts_with("http"))) {
                 transformed.push(Item {
-                    category: "text".to_string(),
+                    category: building_type.to_string(),
                     text: building.clone()
                 });
+                building_type = "text";
                 building.clear();
                 continue;
             }
             match next.category.as_str() {
                 "italic" => {
-                    building.push_str("<i>");
+                    building_type = "italic";
                     building.push_str(next.text.as_str());
-                    building.push_str("</i>");
                 },
                 "bold" => {
-                    building.push_str("<b>");
+                    building_type = "bold";
                     building.push_str(next.text.as_str());
-                    building.push_str("</b>");
                 },
-                _ => building.push_str(next.text.as_str())
+                _ => {
+                    if next.text != "" {
+                        building.push_str(next.text.as_str());
+                    }
+                }
             }
         }
         transformed
